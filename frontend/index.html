@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ficha de Estudos — EsPCEx</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="folder">
+
+  <header class="folder__header">
+    <div class="stamp-corner">Nº 001</div>
+    <div class="header__title">
+      <span class="eyebrow">Ficha de acompanhamento — candidato</span>
+      <h1>PAINEL DE ESTUDOS</h1>
+      <span class="subtitle">Preparação EsPCEx</span>
+    </div>
+    <div class="header__streak">
+      <span class="streak__value" id="streak-value">0</span>
+      <span class="streak__label">dias seguidos<br>estudando</span>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-tab="dashboard"><span class="tab__idx">01</span> Painel</button>
+    <button class="tab" data-tab="sessoes"><span class="tab__idx">02</span> Sessões de Estudo</button>
+    <button class="tab" data-tab="erros"><span class="tab__idx">03</span> Caderno de Erros</button>
+    <button class="tab" data-tab="materias"><span class="tab__idx">04</span> Matérias</button>
+    <button class="tab" data-tab="metas"><span class="tab__idx">05</span> Metas</button>
+    <button class="tab" data-tab="evolucao"><span class="tab__idx">06</span> Evolução</button>
+  </nav>
+
+  <main class="content">
+
+    <!-- ===================== DASHBOARD ===================== -->
+    <section class="panel active" id="panel-dashboard">
+      <div class="stat-row">
+        <div class="stat-card">
+          <span class="stat-card__label">Horas totais registradas</span>
+          <span class="stat-card__value" id="stat-total-horas">0h</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card__label">Revisões pendentes hoje</span>
+          <span class="stat-card__value stat-card__value--alert" id="stat-erros-pendentes">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card__label">Erros consolidados</span>
+          <span class="stat-card__value stat-card__value--ok" id="stat-erros-consolidados">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card__label">Total de erros no caderno</span>
+          <span class="stat-card__value" id="stat-erros-total">0</span>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="plate">
+          <h2>Estudo por dia <span class="plate__hint">últimos 14 dias</span></h2>
+          <canvas id="chart-dias" height="150"></canvas>
+        </div>
+        <div class="plate">
+          <h2>Distribuição por matéria <span class="plate__hint">total acumulado</span></h2>
+          <canvas id="chart-materias" height="150"></canvas>
+        </div>
+      </div>
+
+      <div class="plate">
+        <h2>Horas por matéria x meta semanal</h2>
+        <div id="metas-lista" class="metas-lista"></div>
+      </div>
+
+      <div class="plate">
+        <h2>Revisar agora <span class="plate__hint">itens do caderno de erros vencidos</span></h2>
+        <div id="dashboard-revisoes" class="erros-lista"></div>
+      </div>
+    </section>
+
+    <!-- ===================== SESSÕES ===================== -->
+    <section class="panel" id="panel-sessoes">
+      <div class="plate">
+        <h2>Registrar sessão de estudo</h2>
+        <form id="form-sessao" class="form-grid">
+          <label>Matéria
+            <select name="materia_id" id="sessao-materia" required></select>
+          </label>
+          <label>Data
+            <input type="date" name="data" required>
+          </label>
+          <label>Duração (minutos)
+            <input type="number" name="duracao_min" min="1" placeholder="ex: 90" required>
+          </label>
+          <label>Tipo
+            <select name="tipo">
+              <option value="teoria">Teoria</option>
+              <option value="exercicios">Exercícios</option>
+              <option value="revisao">Revisão</option>
+              <option value="simulado">Simulado</option>
+            </select>
+          </label>
+          <label>Questões resolvidas
+            <input type="number" name="questoes_total" min="0" placeholder="ex: 20">
+          </label>
+          <label>Acertos
+            <input type="number" name="questoes_corretas" min="0" placeholder="ex: 16">
+          </label>
+          <label class="span-2">Tópico
+            <input type="text" name="topico" placeholder="ex: Progressão Aritmética">
+          </label>
+          <label class="span-2">Observações
+            <textarea name="observacoes" rows="2" placeholder="Como foi a sessão, dificuldades, etc."></textarea>
+          </label>
+          <button type="submit" class="btn btn--primary span-2">Registrar sessão</button>
+        </form>
+      </div>
+
+      <div class="plate">
+        <h2>Sessões registradas</h2>
+        <div class="filtro-row">
+          <label>Filtrar por matéria
+            <select id="filtro-sessao-materia"><option value="">Todas</option></select>
+          </label>
+        </div>
+        <table class="tabela" id="tabela-sessoes">
+          <thead><tr><th>Data</th><th>Matéria</th><th>Tipo</th><th>Tópico</th><th>Duração</th><th>Questões</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===================== ERROS ===================== -->
+    <section class="panel" id="panel-erros">
+      <div class="plate">
+        <h2>Registrar erro</h2>
+        <p class="plate__desc">Todo erro entra em ciclo de revisão espaçada: 1 → 7 → 21 dias. Depois da 3ª revisão, o item é marcado como consolidado.</p>
+        <form id="form-erro" class="form-grid">
+          <label>Matéria
+            <select name="materia_id" id="erro-materia" required></select>
+          </label>
+          <label>Tipo de erro
+            <select name="tipo_erro">
+              <option value="falta_conteudo">Falta de conteúdo</option>
+              <option value="atencao">Falta de atenção</option>
+              <option value="interpretacao">Erro de interpretação</option>
+              <option value="cansaco">Cansaço / pressa</option>
+            </select>
+          </label>
+          <label class="span-2">Tópico / assunto
+            <input type="text" name="topico" placeholder="ex: Voz passiva">
+          </label>
+          <label class="span-2">Questão / descrição do erro
+            <textarea name="questao" rows="2" placeholder="O que a questão pedia"></textarea>
+          </label>
+          <label class="span-2">Motivo / o que aprendeu
+            <textarea name="motivo" rows="2" placeholder="Por que errou e qual é a forma correta"></textarea>
+          </label>
+          <button type="submit" class="btn btn--primary span-2">Adicionar ao caderno</button>
+        </form>
+      </div>
+
+      <div class="plate">
+        <h2>Caderno de erros</h2>
+        <div class="filtro-row">
+          <label>Filtrar por matéria
+            <select id="filtro-erro-materia"><option value="">Todas</option></select>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="filtro-erro-pendentes"> Só pendentes hoje
+          </label>
+        </div>
+        <div id="lista-erros" class="erros-lista"></div>
+      </div>
+    </section>
+
+    <!-- ===================== MATÉRIAS ===================== -->
+    <section class="panel" id="panel-materias">
+      <div class="plate">
+        <h2>Nova matéria</h2>
+        <form id="form-materia" class="form-grid">
+          <label>Nome
+            <input type="text" name="nome" placeholder="ex: Matemática" required>
+          </label>
+          <label>Cor
+            <input type="color" name="cor" value="#8a9a5b">
+          </label>
+          <label>Meta semanal (minutos)
+            <input type="number" name="meta_semanal_min" min="0" placeholder="ex: 300">
+          </label>
+          <button type="submit" class="btn btn--primary span-2">Adicionar matéria</button>
+        </form>
+      </div>
+      <div class="plate">
+        <h2>Matérias cadastradas</h2>
+        <div id="lista-materias" class="materias-lista"></div>
+      </div>
+    </section>
+
+    <!-- ===================== METAS ===================== -->
+    <section class="panel" id="panel-metas">
+      <div class="plate" id="prova-plate">
+        <h2>Contagem regressiva</h2>
+        <div id="prova-countdown"></div>
+      </div>
+
+      <div class="plate">
+        <h2>Meta geral</h2>
+        <p class="plate__desc">Metas gerais de estudo, usadas para acompanhar seu ritmo na semana e no painel.</p>
+        <form id="form-meta-geral" class="form-grid">
+          <label>Horas por semana
+            <input type="number" name="horas_semana" min="0" step="0.5" placeholder="ex: 25">
+          </label>
+          <label>Questões por semana
+            <input type="number" name="questoes_semana" min="0" placeholder="ex: 150">
+          </label>
+          <label>Dias de estudo por semana
+            <input type="number" name="dias_semana" min="0" max="7" placeholder="ex: 6">
+          </label>
+          <label>Data da prova (EsPCEx)
+            <input type="date" name="data_prova">
+          </label>
+          <button type="submit" class="btn btn--primary span-2">Salvar metas gerais</button>
+        </form>
+      </div>
+
+      <div class="plate">
+        <h2>Progresso da semana atual</h2>
+        <div id="metas-progresso-semana" class="metas-lista"></div>
+      </div>
+
+      <div class="plate">
+        <h2>Metas por matéria</h2>
+        <p class="plate__desc">Defina quantos minutos e quantas questões você quer fazer por semana em cada matéria.</p>
+        <div id="metas-materias-lista" class="materias-lista"></div>
+      </div>
+    </section>
+
+    <!-- ===================== EVOLUÇÃO ===================== -->
+    <section class="panel" id="panel-evolucao">
+      <div class="filtro-row">
+        <label>Período
+          <select id="evolucao-periodo">
+            <option value="8">Últimas 8 semanas</option>
+            <option value="12" selected>Últimas 12 semanas</option>
+            <option value="26">Últimas 26 semanas</option>
+            <option value="52">Último ano</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="grid-2">
+        <div class="plate">
+          <h2>Horas estudadas por semana</h2>
+          <canvas id="chart-evolucao-horas" height="150"></canvas>
+        </div>
+        <div class="plate">
+          <h2>Taxa de acerto em questões</h2>
+          <canvas id="chart-evolucao-acerto" height="150"></canvas>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="plate">
+          <h2>Dias de estudo por semana</h2>
+          <canvas id="chart-evolucao-dias" height="150"></canvas>
+        </div>
+        <div class="plate">
+          <h2>Caderno de erros: registrados x consolidados</h2>
+          <canvas id="chart-evolucao-erros" height="150"></canvas>
+        </div>
+      </div>
+
+      <div class="plate">
+        <h2>Resumo semanal</h2>
+        <table class="tabela" id="tabela-evolucao">
+          <thead>
+            <tr><th>Semana</th><th>Horas</th><th>Dias</th><th>Questões</th><th>Acerto</th><th>Erros novos</th><th>Consolidados</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="folder__footer">Sistema de controle de estudos — dados salvos localmente no servidor (SQLite)</footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
